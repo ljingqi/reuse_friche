@@ -8,6 +8,8 @@ Ce dossier est un site **statique** (aucun serveur applicatif, aucune base de
 données) : il peut être publié tel quel sur GitHub Pages, Netlify, un intranet,
 ou simplement servi par un petit serveur HTTP local.
 
+![Aperçu — vue d'ensemble](img/apercu-desktop.png)
+
 ---
 
 ## 1. Contenu
