@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0e1420">
-<title>关于再利用一处工业荒地的设想 — 7 Rue F. Kinner à Strasbourg</title>
+<title>Réinventer une friche industrielle — 7 Rue Fritz Kiener à Strasbourg</title>
 <meta name="description" content="Web map 3D du projet de reconversion d'une friche industrielle : maquette BIM géoréférencée, lecture par niveau et zonage fonctionnel.">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e1420'/%3E%3Crect x='6' y='16' width='20' height='9' rx='1' fill='%23e08020'/%3E%3Crect x='6' y='6' width='20' height='9' rx='1' fill='%232e9e5b'/%3E%3C/svg%3E">
@@ -22,8 +22,8 @@
 
 <!-- ------------------------------------------------------------------ titre -->
 <header id="entete">
-  <h1 id="titre">关于再利用一处工业荒地的设想</h1>
-  <p id="sousTitre">7 Rue F. Kinner à Strasbourg</p>
+  <h1 id="titre">Réinventer une friche industrielle</h1>
+  <p id="sousTitre">7 Rue Fritz Kiener à Strasbourg</p>
   <p class="mention">
     <span class="puces">Reconversion d'une friche industrielle</span>
     <span class="sep">·</span>
@@ -40,51 +40,51 @@
 
   <!-- niveaux -->
   <section class="bloc">
-    <h2>Niveaux <span class="zh">楼层</span></h2>
+    <h2>Niveaux</h2>
     <div id="listeNiveaux" class="segmente" role="radiogroup" aria-label="Choix du niveau"></div>
     <p class="aide">
       <span class="pastille-fixe">🔒</span>
-      Le changement de niveau ne déplace pas la caméra.
-      <span class="zh">切换楼层时摄影机视角保持不变。</span>
+      Le changement de niveau ne déplace pas la caméra : le point de vue reste
+      identique d'un niveau à l'autre.
     </p>
   </section>
 
   <!-- zonage -->
   <section class="bloc">
-    <h2>Zonage fonctionnel <span class="zh">功能分区</span></h2>
+    <h2>Zonage fonctionnel</h2>
     <label class="interrupteur">
       <input type="checkbox" id="caseZonage" checked>
       <span class="rail"><span class="curseur"></span></span>
-      <span class="etiquette">Afficher le masque de zonage <span class="zh">显示功能分区遮罩</span></span>
+      <span class="etiquette">Afficher le masque de zonage</span>
     </label>
     <ul class="legende" id="legende"></ul>
     <p class="aide">
-      Le masque suit le niveau affiché : sélectionnez un niveau pour lire son usage.
-      <span class="zh">选择某一层即可看到该层的功能分区。</span>
+      Le masque suit le niveau affiché : sélectionnez un niveau pour lire son
+      usage.
     </p>
   </section>
 
   <!-- fond de carte -->
   <section class="bloc">
-    <h2>Fond de carte <span class="zh">底图</span></h2>
+    <h2>Fond de carte</h2>
     <div id="listeFonds" class="segmente petit" role="radiogroup" aria-label="Fond de carte"></div>
   </section>
 
   <!-- calques annexes -->
   <section class="bloc">
-    <h2>Couches <span class="zh">图层</span></h2>
-    <label class="case"><input type="checkbox" id="caseBdtopo" checked> Emprise BD TOPO <span class="zh">参考轮廓</span></label>
-    <label class="case"><input type="checkbox" id="caseOmbres"> Ombres portées <span class="zh">阴影</span></label>
+    <h2>Couches</h2>
+    <label class="case"><input type="checkbox" id="caseBdtopo" checked> Emprise BD TOPO (référence du calage)</label>
+    <label class="case"><input type="checkbox" id="caseOmbres"> Ombres portées</label>
   </section>
 
   <!-- actions -->
   <section class="bloc actions">
-    <button type="button" id="btnVue" class="bouton">Réinitialiser la vue <span class="zh">重置视角</span></button>
-    <button type="button" id="btnPlein" class="bouton">Plein écran <span class="zh">全屏</span></button>
+    <button type="button" id="btnVue" class="bouton">Réinitialiser la vue</button>
+    <button type="button" id="btnPlein" class="bouton">Plein écran</button>
   </section>
 
   <details class="bloc sources">
-    <summary>Sources et repères <span class="zh">数据来源</span></summary>
+    <summary>Sources et repères</summary>
     <ul id="listeSources"></ul>
     <p id="noteVerticale" class="aide"></p>
   </details>
@@ -100,7 +100,7 @@
 <div id="voile">
   <div class="boite">
     <div class="rond"></div>
-    <p id="message">Chargement de la maquette…<br><span class="zh">正在加载模型…</span></p>
+    <p id="message">Chargement de la maquette…</p>
   </div>
 </div>
 

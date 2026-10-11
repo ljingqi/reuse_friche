@@ -1,6 +1,6 @@
-# 关于再利用一处工业荒地的设想 — Web map 3D
+# Réinventer une friche industrielle — Web map 3D
 
-> **7 Rue F. Kinner à Strasbourg** — reconversion d'une friche industrielle
+> **7 Rue Fritz Kiener à Strasbourg** — reconversion d'une friche industrielle
 > Maquette BIM géoréférencée (Lambert-93 / RGF93 — EPSG:2154), lecture par niveau
 > et masque de zonage fonctionnel.
 
@@ -106,13 +106,32 @@ Les fichiers de `data/` sont **générés**, pas écrits à la main :
 > ⚠️ Le script doit être relancé **après** tout changement de la maquette
 > (`_work/build_bim3d.py`), mais **avant** de republier le site.
 
+> ⚠️ `_work/build_bim3d.py` reconstruit `BIM.gdb/BIM_3D` **dans le repère local**
+> et écrase donc le géoréférencement. Après toute reconstruction, il faut
+> relancer `_work/georef.py` (qui remet `BIM_3D` et `Polylines_3D` en
+> Lambert-93) **avant** `_work/export_web.py`, car `export_web.py` attend des
+> anneaux déjà en EPSG:2154.
+
+### Ouvrages écartés du modèle
+
+`_work/build_bim3d.py` contient une liste `EXCLURE` (zones en coordonnées
+locales). Tout ouvrage dont **tous** les points tombent dans une zone est
+retiré de la maquette. Une entrée y figure :
+
+| Ouvrage | Zone (x min, x max, y min, y max) | Motif |
+|---|---|---|
+| Enveloppe de quatre parois (3,29 × 1,32 m) autour de l'escalier de la sortie de secours RDC → SS1, au sud de la façade | −28,15 / −24,40 / −10,90 / −9,15 | ouvrage inexistant dans l'état actuel des lieux |
+
+L'escalier lui-même (`S000325` … `S000340`) **n'est pas** concerné : seules les
+quatre parois ont été retirées.
+
 ---
 
 ## 5. Commandes de la carte
 
 | Commande | Effet |
 |---|---|
-| **Niveaux / 楼层** | Affiche un niveau (ou le bâtiment complet). **La caméra ne bouge jamais** lors du changement de niveau. |
+| **Niveaux** | Affiche un niveau (ou le bâtiment complet). **La caméra ne bouge jamais** lors du changement de niveau. |
 | **Afficher le masque de zonage** | Active/désactive les volumes de zonage : **résidentiel** en vert (1er et 2e étage), **commercial et services** en orange (rez-de-chaussée et sous-sol). |
 | **Fond de carte** | Imagerie satellite (Esri World Imagery), fond topographique (Esri World Topographic Map) ou aucun fond. |
 | **Couches** | Emprise BD TOPO de référence, ombres portées. |

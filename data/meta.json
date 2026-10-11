@@ -1,9 +1,9 @@
 {
-  "titre": "关于再利用一处工业荒地的设想",
-  "sous_titre": "7 Rue F. Kinner à Strasbourg",
+  "titre": "Réinventer une friche industrielle",
+  "sous_titre": "7 Rue Fritz Kiener à Strasbourg",
   "origine": {
-    "lon": 7.759912701951779,
-    "lat": 48.582869898304374,
+    "lon": 7.759912702007201,
+    "lat": 48.58286989830693,
     "hauteur_ellipsoide_m": 0.0,
     "epsg": 2154,
     "x_l93": 1050874.59,
@@ -40,7 +40,6 @@
       "etage": -1,
       "code": "-1",
       "nom_fr": "Sous-sol (SS1)",
-      "nom_zh": "地下1层",
       "z_sol": -4.0,
       "hauteur": 4.0,
       "usage": "commercial",
@@ -435,14 +434,13 @@
       "etage": 0,
       "code": "RDC",
       "nom_fr": "Rez-de-chaussée",
-      "nom_zh": "地面层",
       "z_sol": 0.0,
       "hauteur": 3.5,
       "usage": "commercial",
       "glb": "rdc.glb",
       "u_sol": 0.5,
       "u_toit": 4.0,
-      "fichier_ko": 302.9,
+      "fichier_ko": 299.6,
       "zones": [
         [
           [
@@ -762,7 +760,6 @@
       "etage": 1,
       "code": "1",
       "nom_fr": "1er étage",
-      "nom_zh": "1楼",
       "z_sol": 3.5,
       "hauteur": 3.0,
       "usage": "residentiel",
@@ -1101,7 +1098,6 @@
       "etage": 2,
       "code": "2",
       "nom_fr": "2e étage",
-      "nom_zh": "2楼",
       "z_sol": 6.5,
       "hauteur": 3.0,
       "usage": "residentiel",
@@ -1438,13 +1434,11 @@
   "usages": {
     "residentiel": {
       "label_fr": "Résidentiel",
-      "label_zh": "住宅",
       "couleur": "#2e9e5b",
       "css": "rgb(46,158,91)"
     },
     "commercial": {
       "label_fr": "Commercial et services",
-      "label_zh": "商业与服务",
       "couleur": "#e08020",
       "css": "rgb(224,128,32)"
     }
@@ -1467,8 +1461,8 @@
   ],
   "avertissement": "Les cotes verticales sont relatives : U = altitude NGF - 139.0 m (sol du site, BD TOPO altitude_minimale_sol).",
   "stats": {
-    "solides": 408,
+    "solides": 407,
     "fichiers": 4,
-    "poids_glb_ko": 1216.7
+    "poids_glb_ko": 1213.3
   }
 }

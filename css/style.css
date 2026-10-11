@@ -37,7 +37,6 @@ html, body {
   inset: 0;
 }
 
-.zh { color: var(--texte-3); font-size: 0.88em; font-weight: 400; }
 
 /* ------------------------------------------------------------------ en-tête */
 #entete {
@@ -129,7 +128,6 @@ body.panneau-ferme #panneau {
   letter-spacing: 0.11em;
   color: var(--texte-2);
 }
-.bloc h2 .zh { margin-left: 6px; text-transform: none; letter-spacing: 0; }
 
 .aide {
   margin: 9px 0 0;
@@ -137,7 +135,6 @@ body.panneau-ferme #panneau {
   line-height: 1.55;
   color: var(--texte-3);
 }
-.aide .zh { display: block; margin-top: 2px; }
 .pastille-fixe { margin-right: 4px; }
 
 /* --------------------------------------------------------- menu des niveaux */
@@ -230,7 +227,6 @@ body.panneau-ferme #panneau {
 .interrupteur input:checked + .rail { background: rgba(108, 194, 255, 0.42); }
 .interrupteur input:checked + .rail .curseur { transform: translateX(17px); background: #fff; }
 .etiquette { font-size: 12.5px; line-height: 1.4; }
-.etiquette .zh { display: block; }
 
 .case {
   display: flex;
@@ -273,7 +269,6 @@ body.panneau-ferme #panneau {
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .bouton:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--bordure-2); }
-.bouton .zh { display: block; font-size: 11px; }
 
 /* ------------------------------------------------------------------ sources */
 .sources summary {

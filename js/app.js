@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Web map — 关于再利用一处工业荒地的设想
-   7 Rue F. Kinner, Strasbourg
+   Web map — Réinventer une friche industrielle
+   7 Rue Fritz Kiener, Strasbourg
 
    - maquette BIM (multipatch -> glTF) posée dans un repère ENU géoréférencé
    - menu de niveaux : le changement de niveau ne touche JAMAIS la caméra
@@ -18,9 +18,9 @@
   };
 
   const FONDS = [
-    { id: 'imagerie', libelle: 'Imagerie satellite', zh: '卫星影像' },
-    { id: 'plan',     libelle: 'Fond topographique', zh: '地形图' },
-    { id: 'aucun',    libelle: 'Aucun fond',         zh: '无底图' }
+    { id: 'imagerie', libelle: 'Imagerie satellite' },
+    { id: 'plan',     libelle: 'Fond topographique' },
+    { id: 'aucun',    libelle: 'Aucun fond de plan' }
   ];
 
   /* ------------------------------------------------------------------ etat */
@@ -280,8 +280,8 @@
         show: true,
         position: pointEnu(c[0], c[1], (n.u_sol + n.u_toit) / 2),
         label: {
-          text: n.code + '　' + usage.label_zh,
-          font: '600 15px "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif',
+          text: n.code + '  ' + usage.label_fr,
+          font: '600 15px "Segoe UI", system-ui, -apple-system, sans-serif',
           fillColor: Cesium.Color.WHITE,
           outlineColor: couleur.withAlpha(0.95),
           outlineWidth: 5,
@@ -388,12 +388,12 @@
   function construireNiveaux() {
     const zone = $('#listeNiveaux');
     zone.innerHTML = '';
-    zone.appendChild(bouton('tous', '⌂', 'Bâtiment complet', null, '整栋'));
+    zone.appendChild(bouton('tous', '⌂', 'Bâtiment complet', null, null));
 
     const ordre = etat.meta.niveaux.slice().sort(function (a, b) { return b.etage - a.etage; });
     ordre.forEach(function (n) {
       const usage = etat.meta.usages[n.usage];
-      zone.appendChild(bouton(n.id, n.code, n.nom_fr, usage.couleur, n.nom_zh));
+      zone.appendChild(bouton(n.id, n.code, n.nom_fr, usage.couleur, usage.label_fr));
     });
 
     zone.addEventListener('click', function (ev) {
@@ -408,7 +408,7 @@
     const zone = $('#listeFonds');
     zone.innerHTML = '';
     FONDS.forEach(function (f) {
-      const b = bouton(f.id, '', f.libelle, null, f.zh);
+      const b = bouton(f.id, '', f.libelle, null, null);
       b.querySelector('.code').style.display = 'none';
       zone.appendChild(b);
     });
@@ -439,7 +439,7 @@
       const txt = document.createElement('span');
       txt.className = 'txt';
       const fort = document.createElement('strong');
-      fort.textContent = u.label_zh + ' · ' + u.label_fr;
+      fort.textContent = u.label_fr;
       txt.appendChild(fort);
       const em = document.createElement('em');
       em.textContent = 'niveaux ' + groupes[cle].join(' · ');
@@ -534,7 +534,7 @@
 
   /* --------------------------------------------------------------- démarrage */
   async function demarrer() {
-    dire('Chargement de la maquette…<br><span class="zh">正在加载模型…</span>');
+    dire('Chargement de la maquette…');
 
     const reponse = await fetch('data/meta.json', { cache: 'no-cache' });
     if (!reponse.ok) throw new Error('meta.json introuvable (' + reponse.status + ')');
@@ -652,7 +652,7 @@
 
   demarrer().catch(function (err) {
     console.error(err);
-    dire('Impossible de charger la carte.<br><span class="zh">地图加载失败。</span><br>' +
+    dire('Impossible de charger la carte.<br>' +
          '<small>' + (err && err.message ? err.message : err) + '</small>', true);
   });
 })();
