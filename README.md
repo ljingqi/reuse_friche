@@ -25,7 +25,6 @@ web/
 │   ├── ss1.glb  rdc.glb       un modèle 3D par niveau (glTF binaire)
 │   ├── etg1.glb  etg2.glb
 │   └── ref_bdtopo.geojson     emprise BD TOPO utilisée pour le calage
-├── .github/workflows/pages.yml  publication automatique sur GitHub Pages
 ├── .nojekyll                  demandé par GitHub Pages
 └── README.md
 ```
@@ -62,22 +61,22 @@ python -m http.server 8777
    git push -u origin main
    ```
 
-3. La publication est **automatique** : `.github/workflows/pages.yml` publie la
-   racine du dépôt à chaque `push` sur `main`, et active lui-même GitHub Pages
-   (`enablement: true`). Aucun réglage à faire dans *Settings*.
-4. Attendre 1 à 2 minutes (onglet **Actions** du dépôt pour suivre l'avancement).
-   L'adresse est :
+3. Activer la publication, **une seule fois** :
+   **Settings → Pages → Build and deployment**
+
+   - *Source* : `Deploy from a branch`
+   - *Branch* : `main`, dossier `/ (root)` → **Save**
+
+   Cette étape est manuelle : GitHub exige les droits d'administration du dépôt
+   pour *créer* le site Pages, droits que le jeton des Actions ne possède pas.
+   Il n'existe donc pas de contournement automatisable.
+4. Attendre 1 à 2 minutes, puis ouvrir :
 
    `https://<utilisateur>.github.io/<depot>/`
 
 Le site est alors accessible depuis un PC **et** une tablette, à la même adresse.
 Tous les chemins du projet sont relatifs : le sous-dossier `/<depot>/` ne pose
-aucun problème.
-
-> **Variante sans Actions** — si l'onglet *Actions* est désactivé sur le dépôt :
-> **Settings → Pages → Build and deployment**, *Source* = `Deploy from a branch`,
-> *Branch* = `main` + dossier `/ (root)`, puis **Save**. Il faut alors supprimer
-> `.github/workflows/pages.yml`, les deux mécanismes ne pouvant coexister.
+aucun problème. Chaque `git push` sur `main` republie le site automatiquement.
 
 > Si une connexion Git demande une authentification, utiliser un
 > *Personal Access Token* (Settings → Developer settings) comme mot de passe.
