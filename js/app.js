@@ -1,27 +1,69 @@
 /* ==========================================================================
-   Web map — Réinventer une friche industrielle
+   Web map — Revalorisation d'une friche industrielle
    7 Rue Fritz Kiener, Strasbourg
 
    - maquette BIM (multipatch -> glTF) posée dans un repère ENU géoréférencé
    - menu de niveaux : le changement de niveau ne touche JAMAIS la caméra
    - masque de zonage fonctionnel activable / désactivable
+   - fonds de plan Esri : accès libre par défaut, clé API facultative
    ========================================================================== */
 
 (function () {
   'use strict';
 
   /* ------------------------------------------------------------- constantes */
+  /* Services raster « historiques » d'Esri. Ils répondent sans clé et
+     constituent donc le repli permanent de la carte. */
   const SERVICES = {
     imagerie:   'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
     plan:       'https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer',
     etiquettes: 'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer'
   };
 
+  /* Clé API ArcGIS : FACULTATIVE. Trois sources, par ordre de priorité :
+       1. ?esri=VOTRE_CLE dans l'URL (mémorisée ensuite par le navigateur ;
+          ?esri=off efface la clé mémorisée)
+       2. window.ESRI_API_KEY, à définir dans un éventuel js/config.js
+       3. la clé mémorisée lors d'une visite précédente
+     Sans clé : les fonds passent par SERVICES (accès libre, aucune inscription).
+     Avec clé : l'imagerie satellite et le relief ombré sont servis par
+     ibasemaps-api.arcgis.com, le service officiel adossé au quota du compte. */
+  function cleEsri() {
+    let k = null;
+    try { k = new URLSearchParams(window.location.search).get('esri'); } catch (e) { k = null; }
+    if (k !== null) {
+      k = k.trim();
+      if (!k || k === 'off' || k === '0') {
+        try { localStorage.removeItem('esri_cle'); } catch (e) {}
+      } else {
+        try { localStorage.setItem('esri_cle', k); } catch (e) {}
+        return k;
+      }
+    }
+    let memo = null;
+    try { memo = localStorage.getItem('esri_cle'); } catch (e) { memo = null; }
+    return memo || window.ESRI_API_KEY || null;
+  }
+
+  const CLE_ESRI = cleEsri();
+
+  /* la clé est déclarée à Cesium avant toute création de fond de plan */
+  if (CLE_ESRI && window.Cesium && Cesium.ArcGisMapService) {
+    Cesium.ArcGisMapService.defaultAccessToken = CLE_ESRI;
+  }
+  window.__bimCleEsri = CLE_ESRI;
+
   const FONDS = [
     { id: 'imagerie', libelle: 'Imagerie satellite' },
     { id: 'plan',     libelle: 'Fond topographique' },
     { id: 'aucun',    libelle: 'Aucun fond de plan' }
   ];
+
+  /* Le relief ombré n'est proposé par Cesium que sur le service officiel :
+     l'entrée n'apparaît donc qu'en présence d'une clé API. */
+  if (CLE_ESRI) {
+    FONDS.splice(2, 0, { id: 'relief', libelle: 'Relief ombré (Esri)' });
+  }
 
   /* ------------------------------------------------------------------ etat */
   const etat = {
@@ -151,30 +193,84 @@
   }
 
   async function chargerFonds() {
-    async function provider(url) {
-      return Cesium.ArcGisMapServerImageryProvider.fromUrl(url);
+    const P = Cesium.ArcGisMapServerImageryProvider;
+    const TYPE = Cesium.ArcGisBaseMapType;
+
+    /* fournisseur « officiel », adossé à ibasemaps-api.arcgis.com (clé requise) */
+    function officiel(type) {
+      return P.fromBasemapType(type, { token: CLE_ESRI, enablePickFeatures: false });
     }
+    /* fournisseur en accès libre (aucune clé) */
+    function libre(url) {
+      return P.fromUrl(url);
+    }
+
+    /* une clé annoncée donne accès au service officiel */
+    const cleUtilisable = !!CLE_ESRI;
+
+    /* -- imagerie satellite -------------------------------------------------- */
     try {
-      const img = await provider(SERVICES.imagerie);
+      let img;
+      if (cleUtilisable) {
+        try {
+          img = await officiel(TYPE.SATELLITE);
+        } catch (e) {
+          console.warn('imagerie officielle indisponible, repli sur l\'accès libre', e);
+          img = await libre(SERVICES.imagerie);
+        }
+      } else {
+        img = await libre(SERVICES.imagerie);
+      }
       D.fond.imagerie = viewer.imageryLayers.addImageryProvider(img);
       D.fond.imagerie.brightness = 1.06;
       D.fond.imagerie.contrast = 1.03;
     } catch (e) {
       console.warn('imagerie indisponible', e);
     }
+
+    /* -- fond topographique (accès libre, avec ou sans clé) ------------------ */
     try {
-      const topo = await provider(SERVICES.plan);
+      const topo = await libre(SERVICES.plan);
       D.fond.plan = viewer.imageryLayers.addImageryProvider(topo);
       D.fond.plan.show = false;
     } catch (e) {
       console.warn('fond topographique indisponible', e);
     }
+
+    /* -- relief ombré (service officiel uniquement) -------------------------- */
+    if (cleUtilisable) {
+      try {
+        const rel = await officiel(TYPE.HILLSHADE);
+        D.fond.relief = viewer.imageryLayers.addImageryProvider(rel);
+        D.fond.relief.show = false;
+      } catch (e) {
+        console.warn('relief ombré indisponible', e);
+      }
+    }
+
+    /* -- étiquettes ---------------------------------------------------------- */
     try {
-      const lab = await provider(SERVICES.etiquettes);
+      const lab = await libre(SERVICES.etiquettes);
       D.fond.etiquettes = viewer.imageryLayers.addImageryProvider(lab);
       D.fond.etiquettes.show = true;
     } catch (e) {
       console.warn('étiquettes indisponibles', e);
+    }
+
+    window.__bimCleActive = cleUtilisable;
+  }
+
+  /* ---------------------------------------------------- état de la clé API */
+  function majEtatCle() {
+    const el = $('#etatCleEsri');
+    if (!el) return;
+    if (CLE_ESRI) {
+      el.innerHTML = 'Clé API ArcGIS active : imagerie et relief servis par ' +
+        '<em>ibasemaps-api.arcgis.com</em>. <a href="?esri=off">Retirer la clé</a>';
+    } else {
+      el.innerHTML = 'Aucune clé API ArcGIS : fonds pris sur les services en ' +
+        'accès libre d\u2019Esri. Ajoutez <code>?esri=VOTRE_CLE</code> à l\u2019adresse ' +
+        'pour activer le service officiel.';
     }
   }
 
@@ -554,6 +650,7 @@
 
     construireNiveaux();
     construireFonds();
+    majEtatCle();
     construireLegende();
     brancherCommandes();
     appliquerEtat();

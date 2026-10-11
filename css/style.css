@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Web map — reconversion d'une friche industrielle
-   7 Rue F. Kinner, Strasbourg — maquette BIM géoréférencée (EPSG:2154)
+   Web map — revalorisation d'une friche industrielle
+   7 Rue Fritz Kiener, Strasbourg — maquette BIM géoréférencée (EPSG:2154)
    ========================================================================== */
 
 :root {
@@ -26,7 +26,7 @@ html, body {
   overflow: hidden;
   background: var(--fond);
   color: var(--texte);
-  font-family: "Inter", "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -136,6 +136,19 @@ body.panneau-ferme #panneau {
   color: var(--texte-3);
 }
 .pastille-fixe { margin-right: 4px; }
+
+/* lien et code insérés dans les textes d'aide (clé API Esri) */
+.aide a { color: var(--accent, #e08020); text-decoration: underline; }
+.aide a:hover { color: #ffb066; }
+.aide code {
+  padding: 1px 4px;
+  border: 1px solid var(--bordure);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 10.5px;
+  color: var(--texte-2);
+}
 
 /* --------------------------------------------------------- menu des niveaux */
 .segmente { display: flex; flex-direction: column; gap: 5px; }

@@ -1,4 +1,4 @@
-# Réinventer une friche industrielle — Web map 3D
+# Revalorisation d'une friche industrielle — Web map 3D
 
 > **7 Rue Fritz Kiener à Strasbourg** — reconversion d'une friche industrielle
 > Maquette BIM géoréférencée (Lambert-93 / RGF93 — EPSG:2154), lecture par niveau
@@ -25,11 +25,12 @@ web/
 │   ├── ss1.glb  rdc.glb       un modèle 3D par niveau (glTF binaire)
 │   ├── etg1.glb  etg2.glb
 │   └── ref_bdtopo.geojson     emprise BD TOPO utilisée pour le calage
+├── .github/workflows/pages.yml  publication automatique sur GitHub Pages
 ├── .nojekyll                  demandé par GitHub Pages
 └── README.md
 ```
 
-Poids total : environ **1,5 Mo**. Aucune dépendance locale : CesiumJS 1.126 est
+Poids total : environ **1,3 Mo**. Aucune dépendance locale : CesiumJS 1.126 est
 chargé depuis un CDN (jsDelivr).
 
 ---
@@ -61,16 +62,22 @@ python -m http.server 8777
    git push -u origin main
    ```
 
-3. Sur GitHub : **Settings → Pages → Build and deployment**
-   - *Source* : `Deploy from a branch`
-   - *Branch* : `main`, dossier `/ (root)` → **Save**
-4. Attendre 1 à 2 minutes. L'adresse est :
+3. La publication est **automatique** : `.github/workflows/pages.yml` publie la
+   racine du dépôt à chaque `push` sur `main`, et active lui-même GitHub Pages
+   (`enablement: true`). Aucun réglage à faire dans *Settings*.
+4. Attendre 1 à 2 minutes (onglet **Actions** du dépôt pour suivre l'avancement).
+   L'adresse est :
 
    `https://<utilisateur>.github.io/<depot>/`
 
 Le site est alors accessible depuis un PC **et** une tablette, à la même adresse.
 Tous les chemins du projet sont relatifs : le sous-dossier `/<depot>/` ne pose
 aucun problème.
+
+> **Variante sans Actions** — si l'onglet *Actions* est désactivé sur le dépôt :
+> **Settings → Pages → Build and deployment**, *Source* = `Deploy from a branch`,
+> *Branch* = `main` + dossier `/ (root)`, puis **Save**. Il faut alors supprimer
+> `.github/workflows/pages.yml`, les deux mécanismes ne pouvant coexister.
 
 > Si une connexion Git demande une authentification, utiliser un
 > *Personal Access Token* (Settings → Developer settings) comme mot de passe.
@@ -81,7 +88,96 @@ seul dépôt, placer le contenu de `web/` dans un dossier `docs/` et choisir
 
 ---
 
-## 4. D'où viennent les données affichées
+## 4. Fond de carte Esri et clé d'API
+
+### 4.1 Fonctionnement sans clé (par défaut)
+
+Le site interroge les services raster « historiques » d'Esri, qui répondent
+**sans inscription** :
+
+| Usage | Service |
+|---|---|
+| Imagerie satellite | `services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer` |
+| Fond topographique | `services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer` |
+| Étiquettes | `services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer` |
+
+Aucune clé n'est donc nécessaire pour que la carte s'affiche. C'est le mode
+livré par défaut.
+
+### 4.2 Obtenir une clé API ArcGIS
+
+1. Créer un compte développeur gratuit sur
+   <https://developers.arcgis.com/> (*Sign up* — un compte public suffit).
+2. Dans le tableau de bord : **API keys → Create API key**.
+3. Titre au choix (par exemple `friche-kiener-webmap`).
+4. **Privilèges** : cocher uniquement *Location services → Basemaps*, qui couvre
+   l'imagerie et le relief. Ne rien cocher d'autre.
+5. **Scopes** : `Basemaps` (+ `Geocoding` inutile ici). Un référentiel
+   (*referrer*) peut être ajouté pour restreindre la clé au domaine
+   `https://<utilisateur>.github.io/*`.
+6. Copier la clé (`AAPK…`). Elle est **publique par nature** : elle est de toute
+   façon visible dans l'URL et dans le code de la page, c'est le référentiel
+   qui la protège.
+
+### 4.3 Utiliser la clé
+
+Trois façons, par ordre de priorité :
+
+| Méthode | Portée |
+|---|---|
+| `?esri=AAPK…` ajouté à l'adresse du site | test immédiat ; la clé est mémorisée par le navigateur |
+| `window.ESRI_API_KEY = 'AAPK…'` dans un `js/config.js` chargé avant `app.js` | installation permanente sur un site dédié |
+| clé mémorisée par une visite précédente | automatique |
+
+`?esri=off` efface la clé mémorisée.
+
+Exemple d'adresse de test :
+
+```
+https://<utilisateur>.github.io/<depot>/?esri=AAPKxxxxxxxx
+```
+
+Avec une clé, `js/app.js` :
+
+1. déclare `Cesium.ArcGisMapService.defaultAccessToken = clé` ;
+2. sert l'imagerie via `ArcGisMapServerImageryProvider.fromBasemapType(
+   Cesium.ArcGisBaseMapType.SATELLITE, { token })`, donc par le service officiel
+   `ibasemaps-api.arcgis.com` ;
+3. ajoute une entrée **Relief ombré (Esri)** (`ArcGisBaseMapType.HILLSHADE`)
+   dans le menu *Fond de carte* ;
+4. affiche l'état de la clé sous le menu.
+
+Le fond topographique et les étiquettes restent sur `services.arcgisonline.com`,
+ces couches n'étant pas exposées par le service officiel dans CesiumJS 1.126.
+
+### 4.4 Enregistrer la clé dans un `js/config.js`
+
+Créer `web/js/config.js` :
+
+```js
+/* chargé avant app.js, non versionné si la clé doit rester locale */
+window.ESRI_API_KEY = 'AAPKxxxxxxxxxxxxxxxxxxxx';
+```
+
+puis, dans `index.html`, juste avant `<script src="js/app.js"></script>` :
+
+```html
+<script src="js/config.js"></script>
+```
+
+> ⚠️ Si ce fichier est poussé sur GitHub, la clé devient publique — ce qui est
+> admis par Esri **à condition** d'avoir restreint la clé à votre domaine
+> (référentiel). Sinon, l'ajouter à `.gitignore`.
+
+### 4.5 Contrôle du bon fonctionnement
+
+Ouvrir la console du navigateur : les requêtes doivent viser
+`ibasemaps-api.arcgis.com`. En cas d'échec du service officiel, le code
+retombe automatiquement sur le service en accès libre.
+
+---
+
+## 5. D'où viennent les données affichées
 
 Les fichiers de `data/` sont **générés**, pas écrits à la main :
 
@@ -127,13 +223,13 @@ quatre parois ont été retirées.
 
 ---
 
-## 5. Commandes de la carte
+## 6. Commandes de la carte
 
 | Commande | Effet |
 |---|---|
 | **Niveaux** | Affiche un niveau (ou le bâtiment complet). **La caméra ne bouge jamais** lors du changement de niveau. |
 | **Afficher le masque de zonage** | Active/désactive les volumes de zonage : **résidentiel** en vert (1er et 2e étage), **commercial et services** en orange (rez-de-chaussée et sous-sol). |
-| **Fond de carte** | Imagerie satellite (Esri World Imagery), fond topographique (Esri World Topographic Map) ou aucun fond. |
+| **Fond de carte** | Imagerie satellite (Esri World Imagery), fond topographique (Esri World Topographic Map), relief ombré (si clé API) ou aucun fond. |
 | **Couches** | Emprise BD TOPO de référence, ombres portées. |
 | **Réinitialiser la vue** | Revient au cadrage oblique d'ouverture. |
 | **Plein écran** | Passage en plein écran (utile sur tablette). |
@@ -143,7 +239,7 @@ molette = zoom, tactile = pincer/glisser.
 
 ---
 
-## 6. Notes techniques
+## 7. Notes techniques
 
 - **Repère** : les modèles sont écrits en glTF **Y-up** classique
   (X = est, Y = haut, Z = sud). CesiumJS 1.126 applique par défaut une
@@ -157,16 +253,19 @@ molette = zoom, tactile = pincer/glisser.
 - **Sous-sol** : le niveau −1 descend à −3,70 m ; il reste visible car
   CesiumJS n'occulte pas les objets situés sous l'ellipsoïde
   (`depthTestAgainstTerrain` désactivé, valeur par défaut).
-- **Fond de plan** : Esri World Imagery / World Topographic Map, utilisés sans
-  clé d'API. Le géoréférencement de l'imagerie Esri peut différer de quelques
-  mètres de celui de la BD TOPO (IGN), qui fait foi ici.
+- **Fond de plan** : par défaut Esri World Imagery / World Topographic Map, via
+  les services en accès libre `services.arcgisonline.com` (aucune clé). Si
+  `?esri=<clé>` est fourni, l'imagerie et le relief passent par le service
+  officiel `ibasemaps-api.arcgis.com` (voir § 4). Le géoréférencement de
+  l'imagerie Esri peut différer de quelques mètres de celui de la BD TOPO (IGN),
+  qui fait foi ici.
 - **Version figée** : CesiumJS 1.126.0 (CDN jsDelivr). Pour figer également le
   CDN, télécharger `Build/Cesium/` dans `vendor/cesium/` et adapter les deux
   balises de `index.html` ainsi que `CESIUM_BASE_URL`.
 
 ---
 
-## 7. Sources
+## 8. Sources
 
 - Levé DWG — *interior design, Strasbourg* (`F_RdC_V2`, `F_RdC_V3`).
 - BD TOPO 2021 — bâtiment `BATIMENT0000002223298023` (IGN).
