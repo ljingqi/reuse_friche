@@ -1,0 +1,391 @@
+/* ==========================================================================
+   Web map — reconversion d'une friche industrielle
+   7 Rue F. Kinner, Strasbourg — maquette BIM géoréférencée (EPSG:2154)
+   ========================================================================== */
+
+:root {
+  --fond:        #0e1420;
+  --voile:       rgba(14, 20, 32, 0.78);
+  --bordure:     rgba(255, 255, 255, 0.10);
+  --bordure-2:   rgba(255, 255, 255, 0.18);
+  --texte:       #e9eef6;
+  --texte-2:     #9db0c8;
+  --texte-3:     #6f8098;
+  --accent:      #6cc2ff;
+  --resid:       #2e9e5b;
+  --commerce:    #e08020;
+  --rayon:       14px;
+  --ombre:       0 10px 34px rgba(0, 0, 0, 0.46);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: "Inter", "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#cesiumContainer {
+  position: absolute;
+  inset: 0;
+}
+
+.zh { color: var(--texte-3); font-size: 0.88em; font-weight: 400; }
+
+/* ------------------------------------------------------------------ en-tête */
+#entete {
+  position: absolute;
+  top: 16px;
+  left: 18px;
+  width: min(420px, calc(100vw - 36px));
+  padding: 16px 20px 14px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: linear-gradient(160deg, rgba(20, 28, 42, 0.92), rgba(14, 20, 32, 0.80));
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: var(--ombre);
+  z-index: 30;
+  pointer-events: auto;
+}
+
+#entete h1 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: #fff;
+}
+
+#sousTitre {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.03em;
+}
+
+#entete .mention {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--bordure);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--texte-3);
+  letter-spacing: 0.02em;
+}
+#entete .sep { margin: 0 6px; }
+
+/* ------------------------------------------------------------------ panneau */
+#panneau {
+  position: absolute;
+  left: 18px;
+  top: 250px;                     /* ajusté en JS sous l'en-tête */
+  width: min(420px, calc(100vw - 36px));
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: var(--voile);
+  backdrop-filter: blur(16px) saturate(1.25);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  box-shadow: var(--ombre);
+  z-index: 29;
+  pointer-events: auto;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.18) transparent;
+}
+#panneau::-webkit-scrollbar { width: 8px; }
+#panneau::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.16); border-radius: 4px; }
+
+body.panneau-ferme #panneau {
+  opacity: 0;
+  transform: translateX(-12px);
+  pointer-events: none;
+}
+
+.bloc {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--bordure);
+}
+.bloc:last-child { border-bottom: 0; }
+
+.bloc h2 {
+  margin: 0 0 9px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--texte-2);
+}
+.bloc h2 .zh { margin-left: 6px; text-transform: none; letter-spacing: 0; }
+
+.aide {
+  margin: 9px 0 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--texte-3);
+}
+.aide .zh { display: block; margin-top: 2px; }
+.pastille-fixe { margin-right: 4px; }
+
+/* --------------------------------------------------------- menu des niveaux */
+.segmente { display: flex; flex-direction: column; gap: 5px; }
+
+.segmente button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px 9px 13px;
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--texte);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.segmente button:hover { background: rgba(255, 255, 255, 0.085); border-color: var(--bordure-2); }
+.segmente button:active { transform: scale(0.988); }
+.segmente button[aria-checked="true"] {
+  background: rgba(108, 194, 255, 0.16);
+  border-color: rgba(108, 194, 255, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(108, 194, 255, 0.18);
+}
+
+.segmente .code {
+  flex: 0 0 auto;
+  min-width: 44px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: #fff;
+}
+.segmente .nom {
+  flex: 1 1 auto;
+  font-size: 12px;
+  color: var(--texte-2);
+  line-height: 1.35;
+}
+.segmente .usage {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #fff;
+  white-space: nowrap;
+}
+.segmente .pastille {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+/* -------------------------------------------------------------- interrupteur */
+.interrupteur {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.interrupteur input { position: absolute; opacity: 0; pointer-events: none; }
+.rail {
+  position: relative;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 21px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--bordure);
+  transition: background 0.18s ease;
+}
+.curseur {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #cbd7e6;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+.interrupteur input:checked + .rail { background: rgba(108, 194, 255, 0.42); }
+.interrupteur input:checked + .rail .curseur { transform: translateX(17px); background: #fff; }
+.etiquette { font-size: 12.5px; line-height: 1.4; }
+.etiquette .zh { display: block; }
+
+.case {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 0;
+  font-size: 12.5px;
+  cursor: pointer;
+  user-select: none;
+}
+.case input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+
+/* ------------------------------------------------------------------ légende */
+.legende { margin: 12px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.legende li { display: flex; align-items: flex-start; gap: 9px; }
+.legende .carre {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  margin-top: 2px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+.legende .txt { font-size: 12px; line-height: 1.45; }
+.legende .txt strong { font-weight: 600; color: #fff; }
+.legende .txt em { display: block; font-style: normal; font-size: 11px; color: var(--texte-3); }
+
+/* -------------------------------------------------------------------- bouton */
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.bouton {
+  flex: 1 1 130px;
+  padding: 9px 12px;
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--texte);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.bouton:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--bordure-2); }
+.bouton .zh { display: block; font-size: 11px; }
+
+/* ------------------------------------------------------------------ sources */
+.sources summary {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--texte-2);
+  cursor: pointer;
+  list-style: none;
+}
+.sources summary::-webkit-details-marker { display: none; }
+.sources summary::before { content: "▸ "; color: var(--texte-3); }
+.sources[open] summary::before { content: "▾ "; }
+.sources ul { margin: 10px 0 0; padding-left: 16px; }
+.sources li { margin-bottom: 5px; font-size: 11.5px; line-height: 1.5; color: var(--texte-2); }
+
+/* ------------------------------------------------- bouton de repli du panneau */
+#basculePanneau {
+  position: absolute;
+  z-index: 31;
+  display: none;
+}
+
+/* ---------------------------------------------------------------------- pied */
+#pied {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  z-index: 20;
+  max-width: min(560px, calc(100vw - 24px));
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(10, 15, 24, 0.62);
+  color: var(--texte-3);
+  font-size: 10.5px;
+  line-height: 1.4;
+  text-align: right;
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------- chargement */
+#voile {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 45%, #16202f 0%, #0b1018 70%);
+  transition: opacity 0.5s ease;
+}
+#voile.parti { opacity: 0; pointer-events: none; }
+#voile .boite { text-align: center; color: var(--texte-2); font-size: 13px; line-height: 1.7; }
+#voile .rond {
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 16px;
+  border: 2px solid rgba(108, 194, 255, 0.22);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: tourne 0.9s linear infinite;
+}
+@keyframes tourne { to { transform: rotate(360deg); } }
+#message.erreur { color: #ff9c8a; }
+
+/* =============================================================== responsive */
+@media (max-width: 860px), (max-height: 620px) {
+  #entete { padding: 12px 15px 11px; }
+  #entete h1 { font-size: 17px; }
+  #sousTitre { font-size: 12px; }
+  #entete .mention { font-size: 10px; margin-top: 8px; padding-top: 8px; }
+
+  #basculePanneau {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    top: auto;
+    left: 14px;
+    bottom: 14px;
+    padding: 11px 15px;
+    border: 1px solid var(--bordure-2);
+    border-radius: 99px;
+    background: rgba(18, 26, 40, 0.94);
+    color: var(--texte);
+    font: inherit;
+    font-size: 12.5px;
+    box-shadow: var(--ombre);
+    cursor: pointer;
+  }
+
+  #panneau {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto !important;
+    width: 100%;
+    height: 58vh;
+    max-height: 58vh;
+    border-radius: 18px 18px 0 0;
+    border-bottom: 0;
+    transform: translateY(0);
+  }
+  body.panneau-ferme #panneau { transform: translateY(102%); opacity: 1; }
+
+  /* le bouton reste accessible au-dessus de la feuille quand elle est ouverte */
+  body:not(.panneau-ferme) #basculePanneau { bottom: calc(58vh + 12px); }
+
+  #pied { bottom: 66px; text-align: left; right: 14px; }
+}
+
+@media (max-width: 860px) and (orientation: landscape) {
+  #panneau { height: 74vh; max-height: 74vh; }
+  body:not(.panneau-ferme) #basculePanneau { bottom: calc(74vh + 12px); }
+}
